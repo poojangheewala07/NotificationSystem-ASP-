@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Real-time Notifications";
+}
+
+<div>
+    <h2>Real-time Notifications</h2>
+    <input type="text" id="notificationInput" />
+    <button onclick="sendNotification()">Send Notification</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.10/signalr.min.js"></script>
+<script>
+    var connection = new signalR.HubConnectionBuilder().withUrl("/notificationHub").build();
+
+    connection.on("ReceiveNotification", function (message) {
+        alert("New Notification: " + message);
+    });
+
+    connection.start().then(function () {
+        console.log("Connected to NotificationHub");
+    }).catch(function (err) {
+        console.error(err.toString());
+    });
+
+    function sendNotification() {
+        var message = document.getElementById("notificationInput").value;
+        connection.invoke("SendNotification", message).catch(function (err) {
+            console.error(err.toString());
+        });
+    }
+</script>
