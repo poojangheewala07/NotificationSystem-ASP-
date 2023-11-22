@@ -1,4 +1,4 @@
-﻿@{
+﻿@* @{
     ViewData["Title"] = "Real-time Notifications";
 }
 
@@ -29,3 +29,58 @@
         });
     }
 </script>
+ *@
+
+@{
+    ViewData["Title"] = "Real-time Notifications";
+}
+
+<div>
+    <h2>Real-time Notifications</h2>
+    <input type="text" id="notificationInput" />
+    <button onclick="sendNotification()">Send Notification</button>
+
+    <div id="notifications">
+        <h3>Notifications:</h3>
+        <ul id="notificationList"></ul>
+        <button onclick="clearNotifications()">Clear Notifications</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.10/signalr.min.js"></script>
+<script>
+    var connection = new signalR.HubConnectionBuilder().withUrl("/notificationHub").build();
+
+    connection.on("ReceiveNotification", function (message) {
+        var notificationList = document.getElementById("notificationList");
+        var listItem = document.createElement("li");
+        listItem.textContent = message;
+        notificationList.appendChild(listItem);
+    });
+
+    connection.start().then(function () {
+        console.log("Connected to NotificationHub");
+    }).catch(function (err) {
+        console.error(err.toString());
+    });
+
+    async function sendNotification() {
+        var message = document.getElementById("notificationInput").value;
+        await fetch("/Home/SendNotification", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(message)
+        });
+    }
+
+    async function clearNotifications() {
+        await fetch("/Home/DeleteNotifications", { method: "DELETE" });
+        var notificationList = document.getElementById("notificationList");
+        while (notificationList.firstChild) {
+            notificationList.removeChild(notificationList.firstChild);
+        }
+    }
+</script>
+
